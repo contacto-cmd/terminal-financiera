@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
-import { Bot, Send, Terminal } from "lucide-react"
+import { Bot, Send, Terminal, TriangleAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const SUGGESTIONS = [
@@ -18,7 +18,7 @@ const TOOL_LABELS: Record<string, string> = {
 }
 
 export function AiAssistant() {
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   })
   const [input, setInput] = useState("")
@@ -109,6 +109,20 @@ export function AiAssistant() {
             </div>
           </div>
         ))}
+
+        {error && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-loss/40 bg-loss/10 p-3 text-xs leading-relaxed text-foreground"
+          >
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-loss" aria-hidden />
+            <span>
+              El agente no pudo responder. Verifica que{" "}
+              <code className="font-mono text-[11px]">AI_GATEWAY_API_KEY</code> esté configurada en Settings
+              → Vars. Los precios, gráficos e indicadores siguen funcionando con datos reales.
+            </span>
+          </div>
+        )}
 
         {(status === "submitted" || status === "streaming") &&
           messages[messages.length - 1]?.role === "user" && (

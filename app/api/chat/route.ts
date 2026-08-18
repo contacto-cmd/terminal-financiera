@@ -86,6 +86,15 @@ export async function POST(req: Request) {
   })
 
   return createUIMessageStreamResponse({
-    stream: toUIMessageStream({ stream: result.stream }),
+    stream: toUIMessageStream({
+      stream: result.stream,
+      onError: (error) => {
+        const msg = error instanceof Error ? error.message : String(error)
+        if (/unauthenticated|api key|AI_GATEWAY_API_KEY/i.test(msg)) {
+          return "Falta la clave AI_GATEWAY_API_KEY. Agrégala en Settings → Vars para activar el agente. El resto de la terminal (precios, gráficos e indicadores) funciona con datos reales."
+        }
+        return `Error del agente: ${msg}`
+      },
+    }),
   })
 }
