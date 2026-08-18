@@ -69,7 +69,8 @@ export async function POST(req: Request) {
         execute: async ({ id, days }) => {
           const chart = await getMarketChart(id, days)
           const prices = chart.prices.map(([, p]) => p)
-          const ind = computeIndicators(prices)
+          const timestamps = chart.prices.map(([t]) => t)
+          const ind = computeIndicators(prices, timestamps)
           return {
             id,
             days,
@@ -77,6 +78,9 @@ export async function POST(req: Request) {
             rsi14: ind.rsi14 != null ? ind.rsi14.toFixed(1) : "n/d",
             sma20: ind.sma20 != null ? formatPrice(ind.sma20) : "n/d",
             sma50: ind.sma50 != null ? formatPrice(ind.sma50) : "n/d",
+            macdHistograma: ind.macd ? ind.macd.histogram.toFixed(2) : "n/d",
+            volatilidadAnual: ind.volatility != null ? `${ind.volatility.toFixed(1)}%` : "n/d",
+            caidaMaxima: ind.maxDrawdown != null ? `${ind.maxDrawdown.toFixed(1)}%` : "n/d",
             tendencia: ind.trend,
             señal: ind.signal,
           }

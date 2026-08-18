@@ -9,8 +9,9 @@ export async function GET(req: Request) {
   try {
     const chart = await getMarketChart(id, days)
     const prices = chart.prices.map(([, p]) => p)
+    const timestamps = chart.prices.map(([t]) => t)
     const series = chart.prices.map(([t, p]) => ({ t, p }))
-    const indicators = computeIndicators(prices)
+    const indicators = computeIndicators(prices, timestamps)
     return Response.json({ id, days, series, indicators, updatedAt: Date.now() })
   } catch (err) {
     console.log("[v0] chart route error:", (err as Error).message)

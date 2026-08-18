@@ -97,7 +97,7 @@ export function bollinger(values: number[], period = 20, mult = 2): Bollinger | 
 }
 
 /** Annualized volatility (%) from daily log returns. */
-export function volatility(values: number[]): number | null {
+export function volatility(values: number[], periodsPerYear = 365): number | null {
   if (values.length < 3) return null
   const returns: number[] = []
   for (let i = 1; i < values.length; i++) {
@@ -106,7 +106,27 @@ export function volatility(values: number[]): number | null {
   if (returns.length < 2) return null
   const mean = returns.reduce((a, b) => a + b, 0) / returns.length
   const variance = returns.reduce((acc, r) => acc + (r - mean) ** 2, 0) / (returns.length - 1)
-  return Math.sqrt(variance) * Math.sqrt(365) * 100
+  return Math.sqrt(variance) * Math.sqrt(periodsPerYear) * 100
+}
+
+/**
+ * Infers how many samples fit in a year from the spacing of timestamps.
+ * CoinGecko returns hourly data for ranges under ~90 days and daily data
+ * beyond that, so annualizing with a fixed 365 would badly understate
+ * volatility on hourly series.
+ */
+export function periodsPerYearFrom(timestamps: number[]): number {
+  if (timestamps.length < 3) return 365
+  const gaps: number[] = []
+  for (let i = 1; i < timestamps.length; i++) {
+    const gap = timestamps[i] - timestamps[i - 1]
+    if (gap > 0) gaps.push(gap)
+  }
+  if (gaps.length === 0) return 365
+  gaps.sort((a, b) => a - b)
+  const medianGapMs = gaps[Math.floor(gaps.length / 2)]
+  const yearMs = 365 * 24 * 60 * 60 * 1000
+  return yearMs / medianGapMs
 }
 
 /** Maximum drawdown (%) over the series. */
@@ -135,7 +155,7 @@ export interface IndicatorSnapshot {
   signal: "sobrecompra" | "sobreventa" | "neutral"
 }
 
-export function computeIndicators(prices: number[]): IndicatorSnapshot {
+export function computeIndicators(prices: number[], timestamps?: number[]): IndicatorSnapshot {
   const price = prices[prices.length - 1] ?? 0
   const sma20 = sma(prices, 20)
   const sma50 = sma(prices, 50)
@@ -160,7 +180,7 @@ export function computeIndicators(prices: number[]): IndicatorSnapshot {
     rsi14,
     macd: macd(prices),
     bollinger: bollinger(prices),
-    volatility: volatility(prices),
+    volatility: volatility(prices, timestamps ? periodsPerYearFrom(timestamps) : 365),
     maxDrawdown: maxDrawdown(prices),
     trend,
     signal,
