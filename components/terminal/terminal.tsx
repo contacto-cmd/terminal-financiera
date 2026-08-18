@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useMarkets } from "@/lib/hooks"
 import { TerminalHeader } from "./header"
+import { MarketPulse } from "./market-pulse"
 import { Watchlist } from "./watchlist"
 import { PriceChart } from "./price-chart"
 import { IndicatorPanel } from "./indicator-panel"
@@ -28,6 +29,10 @@ export function Terminal() {
           {data.error} Reintentando automáticamente…
         </div>
       )}
+
+      <div className="px-4 pt-4 lg:px-6">
+        <MarketPulse />
+      </div>
 
       <div className="grid flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-12 lg:gap-4 lg:p-6">
         {/* Columna izquierda: watchlist */}

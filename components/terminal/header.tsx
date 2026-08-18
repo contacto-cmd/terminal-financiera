@@ -1,7 +1,7 @@
 "use client"
 
 import { Activity, Circle } from "lucide-react"
-import { formatCompact } from "@/lib/format"
+import { formatPercent, formatPrice } from "@/lib/format"
 import type { MarketCoin } from "@/lib/coingecko"
 
 interface HeaderProps {
@@ -11,8 +11,8 @@ interface HeaderProps {
 }
 
 export function TerminalHeader({ markets, updatedAt, isLive }: HeaderProps) {
-  const totalCap = markets?.reduce((sum, c) => sum + (c.market_cap ?? 0), 0)
   const btc = markets?.find((c) => c.id === "bitcoin")
+  const btcChange = btc?.price_change_percentage_24h_in_currency ?? 0
 
   return (
     <header className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -29,15 +29,11 @@ export function TerminalHeader({ markets, updatedAt, isLive }: HeaderProps) {
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs">
         {btc && (
           <div className="text-muted-foreground">
-            BTC.D{" "}
-            <span className="text-foreground">
-              {totalCap ? ((btc.market_cap / totalCap) * 100).toFixed(1) : "-"}%
-            </span>
+            BTC{" "}
+            <span className="text-foreground">{formatPrice(btc.current_price)}</span>{" "}
+            <span className={btcChange >= 0 ? "text-gain" : "text-loss"}>{formatPercent(btcChange)}</span>
           </div>
         )}
-        <div className="text-muted-foreground">
-          CAP TOTAL <span className="text-foreground">{totalCap ? formatCompact(totalCap) : "-"}</span>
-        </div>
         <div className="flex items-center gap-1.5">
           <Circle
             className={`h-2 w-2 ${isLive ? "fill-gain text-gain animate-pulse" : "fill-muted-foreground text-muted-foreground"}`}

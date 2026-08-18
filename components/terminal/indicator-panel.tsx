@@ -1,7 +1,7 @@
 "use client"
 
 import { useChart } from "@/lib/hooks"
-import { formatPrice } from "@/lib/format"
+import { formatNumber, formatPrice } from "@/lib/format"
 
 interface IndicatorPanelProps {
   coinId: string
@@ -27,6 +27,14 @@ export function IndicatorPanel({ coinId, days }: IndicatorPanelProps) {
   const rsiTone = rsi == null ? undefined : rsi >= 70 ? "loss" : rsi <= 30 ? "gain" : "primary"
   const trendTone = ind?.trend === "alcista" ? "gain" : ind?.trend === "bajista" ? "loss" : "primary"
   const signalTone = ind?.signal === "sobrecompra" ? "loss" : ind?.signal === "sobreventa" ? "gain" : "primary"
+
+  const hist = ind?.macd?.histogram ?? null
+  const macdTone = hist == null ? undefined : hist > 0 ? "gain" : hist < 0 ? "loss" : "primary"
+
+  const pctB = ind?.bollinger?.percentB ?? null
+  const bandLabel =
+    pctB == null ? "—" : pctB >= 0.95 ? "banda alta" : pctB <= 0.05 ? "banda baja" : "dentro del rango"
+  const bandTone = pctB == null ? "" : pctB >= 0.95 ? "text-loss" : pctB <= 0.05 ? "text-gain" : "text-primary"
 
   return (
     <section className="rounded-lg border border-border bg-card p-4" aria-label="Indicadores técnicos">
@@ -59,7 +67,35 @@ export function IndicatorPanel({ coinId, days }: IndicatorPanelProps) {
         <Stat label="SMA 50" value={ind?.sma50 != null ? formatPrice(ind.sma50) : "—"} />
         <Stat label="Tendencia" value={ind?.trend ?? "—"} tone={trendTone} />
         <Stat label="Señal" value={ind?.signal ?? "—"} tone={signalTone} />
+        <Stat
+          label="MACD hist."
+          value={ind?.macd ? formatNumber(ind.macd.histogram, 2) : "—"}
+          tone={macdTone}
+        />
+        <Stat
+          label="Volatilidad"
+          value={ind?.volatility != null ? `${ind.volatility.toFixed(1)}% anual` : "—"}
+        />
       </div>
+
+      {ind?.bollinger && (
+        <div className="mt-3 rounded-md border border-border bg-secondary/40 px-3 py-2">
+          <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span>Bandas de Bollinger</span>
+            <span className={bandTone}>{bandLabel}</span>
+          </div>
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="absolute inset-y-0 w-1 rounded-full bg-primary transition-all"
+              style={{ left: `${Math.min(Math.max(ind.bollinger.percentB * 100, 0), 98)}%` }}
+            />
+          </div>
+          <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
+            <span>{formatPrice(ind.bollinger.lower)}</span>
+            <span>{formatPrice(ind.bollinger.upper)}</span>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
